@@ -3,8 +3,17 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.Networking;
 
-public class PlayerController : NetworkBehaviour {
+public class MyPlayerController : NetworkBehaviour {
 
+	[SyncVar]
+	[HideInInspector]
+	public string playerName;
+	[SyncVar]
+	[HideInInspector]
+	public int teamNumber;
+	[SyncVar]
+	[HideInInspector]
+	public Color playerColor;
 	public float acc;
 	public float maxSpeed;
 	public GameObject shot;
@@ -21,9 +30,18 @@ public class PlayerController : NetworkBehaviour {
 	float maxRayLength = 100f;
 	int sceneMask;
 
-
 	// Use this for initialization
 	void Start () {
+
+		if(isLocalPlayer){
+			GameObject spawn;
+			if(teamNumber == 1)
+				spawn = GameObject.Find("Spawn Red");
+			else
+				spawn = GameObject.Find("Spawn Blue");
+			transform.position = spawn.transform.position;
+		}
+		GetComponent<Renderer>().material.color = playerColor;
 		rb = GetComponent<Rigidbody> ();
 		isJumpable = false;
 		sqrMaxSpeed = maxSpeed * maxSpeed;
@@ -130,6 +148,7 @@ public class PlayerController : NetworkBehaviour {
 	[Command]
 	void CmdShoot(){
 		var bullet = (GameObject) Instantiate(shot,transform.position,Quaternion.Euler(new Vector3(0, -get_angle() + 90, 0)));
+		bullet.GetComponent<BulletController>().bullet_color = teamNumber;
 		NetworkServer.Spawn (bullet);
 	}
 

@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
-
-public class BulletController : MonoBehaviour {
+using UnityEngine.Networking;
+public class BulletController : NetworkBehaviour {
 
 	public float speed;
 	public float shotYield;
@@ -11,9 +11,18 @@ public class BulletController : MonoBehaviour {
 	float lifeTime;
 	Vector3 direction = Vector3.zero;
 	bool isDirAssigned = false;
+	[SyncVar]
+	[HideInInspector]
+	public int bullet_color;
+
 
 	// Use this for initialization
 	void Start () {
+		Debug.Log("Bullet" + bullet_color);
+		if(bullet_color == 1)
+			GetComponent<Renderer>().material.color = Color.red;
+		else
+			GetComponent<Renderer>().material.color = Color.blue;
 		rb = GetComponent<Rigidbody> ();
 		lifeTime = shotYield / speed;
 		rb.velocity = transform.forward * speed;
