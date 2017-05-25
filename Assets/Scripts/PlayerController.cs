@@ -1,73 +1,129 @@
 ﻿using UnityEngine;
 using System.Collections;
-using UnityEngine;
 using UnityEngine.Networking;
 
 public class PlayerController : NetworkBehaviour {
 
-	public float acc;
-	public float maxSpeed;
-	public GameObject shot;
-	public float fireInterval = 0.2f;
-	public GameObject grenade;
-	public float fallVelocity = -15f;
+	public float acc = 20f;
+	public float maxSpeed = 5f;
+	public float fallVelocity = -30f;
+	public GameObject Torrent;
+	public GameObject Cannon;
+	public GameObject ExplosionFX;
 
 	private Rigidbody rb;
+	private MeshRenderer mr;
+	private Collider cl;
+	private NetworkStartPosition[] spawnPointPool;
+
+	[SyncVar]
+	public bool isDead = false;
 
 	Vector3 movement;
 	bool isJumpable;
 	float sqrMaxSpeed;
 	float timer;
-	float maxRayLength = 100f;
-	int sceneMask;
-
+	float clickInterval = 0.2f;
 
 	// Use this for initialization
 	void Start () {
+		if (!isLocalPlayer)
+			return;
+		
 		rb = GetComponent<Rigidbody> ();
+		mr = GetComponent<MeshRenderer> ();
+		cl = GetComponent<Collider> ();
 		isJumpable = false;
 		sqrMaxSpeed = maxSpeed * maxSpeed;
-		sceneMask = LayerMask.GetMask ("Scene");
+
+		spawnPointPool = FindObjectsOfType<NetworkStartPosition>();
 	}
 
-	public override void OnStartLocalPlayer()
-	{
-		Camera.main.GetComponent<CameraController>().setTarget(transform);
-	}
-	
 	// Update is called once per frame
 	void Update () {
-		
-		if (!isLocalPlayer)
+		if (!isLocalPlayer || isDead)
 		{
 			return;
 		}
 
+		setCamera ();
+
 		//checkGrounded ();
-
 		timer += Time.deltaTime;
-		if (Input.GetButton("Fire1") && timer > fireInterval) {
-			CmdShoot ();
-			timer = 0f;
 
-		}
-		else if (Input.GetButton("Fire2") && timer > fireInterval) {
-			CmdThrowBomb();
+		if (Input.GetButton("Fire1") && timer > clickInterval) {
+			CmdSetTorrent();
+			//CmdSetCannon();
 			timer = 0f;
 		}
+		else if (Input.GetButton("Fire2") && timer > clickInterval) {
+			CmdKamikaze();
+			timer = 0f;
+		}
+	}
 
-		//Debug.Log (transform.TransformPoint(new Vector3 (0, 0, 0)));
+	void setCamera(){
+		Camera.main.transform.position = transform.position + new Vector3 (0.0f, 9.0f, -5.0f);
+		Camera.main.transform.LookAt (transform.position);
+	}
 
+	[Command]
+	void CmdSetTorrent(){
+		GameObject torrent = Instantiate(Torrent,transform.position,Quaternion.identity);
+		NetworkServer.Spawn (torrent);
+	}
 
+	[Command]
+	void CmdSetCannon(){
+		GameObject cannon = Instantiate(Cannon,transform.position,Quaternion.identity);
+		NetworkServer.Spawn (cannon);
+	}
+
+	[Command]
+	void CmdKamikaze(){
+		GameObject fx = Instantiate(ExplosionFX,transform.position,Quaternion.identity);
+		NetworkServer.Spawn (fx);
+
+		RpcRespawn ();
+
+		// Detect enemy and damage them
+	}
+
+	[ClientRpc]
+	void RpcRespawn()
+	{
+		if (!isLocalPlayer)
+			return;
+		
+		// Set the spawn point to origin as a default value
+		Vector3 spawnPoint = Vector3.zero;
+
+		// If there is a spawn point array and the array is not empty, pick one at random
+		if (spawnPointPool != null && spawnPointPool.Length > 0)
+		{
+			spawnPoint = spawnPointPool[Random.Range(0, spawnPointPool.Length)].transform.position;
+		}
+
+		// Set the player’s position to the chosen spawn point
+		transform.position = spawnPoint;
+
+	}
+
+	void OnCollisionEnter(Collision obj){
+		if (obj.collider.gameObject.layer == LayerMask.NameToLayer("Floor")) {
+			isJumpable = true;
+			//Debug.Log ("touch");
+		}
 	}
 
 	void FixedUpdate(){
 
-		if (!isLocalPlayer)
+		if (!isLocalPlayer || isDead)
 		{
 			return;
 		}
 
+		//Debug.Log ("heybitch");
 		float h = Input.GetAxis ("Horizontal");
 		float v = Input.GetAxis ("Vertical");
 
@@ -82,7 +138,7 @@ public class PlayerController : NetworkBehaviour {
 		//Debug.Log (rb.velocity.y);
 
 		if (rb.velocity.y <= fallVelocity) {
-			
+
 		}
 	}
 
@@ -102,12 +158,7 @@ public class PlayerController : NetworkBehaviour {
 
 	}
 
-	void OnCollisionEnter(Collision obj){
-		if (obj.transform.tag == "Floor") {
-			isJumpable = true;
-			//Debug.Log ("touch");
-		}
-	}
+
 
 	void Jump(){
 		if (Input.GetButton ("Jump") && isJumpable) {
@@ -115,12 +166,12 @@ public class PlayerController : NetworkBehaviour {
 			rb.AddForce (Vector3.up * 700);
 		}
 	}
-
-
+	/*
 	float get_angle(){
 		Vector3 mousePos = Input.mousePosition;
-		Debug.Log (mousePos);
-		Vector3 objectPos = Camera.main.WorldToScreenPoint (transform.position);
+		//Debug.DrawRay (mousePos, Vector3.up);
+
+		Vector3 objectPos = myCam.WorldToScreenPoint (transform.position);
 		mousePos.x = mousePos.x - objectPos.x;
 		mousePos.y = mousePos.y - objectPos.y;
 		float angle = Mathf.Atan2(mousePos.y, mousePos.x) * Mathf.Rad2Deg;
@@ -138,4 +189,7 @@ public class PlayerController : NetworkBehaviour {
 		var bomb = (GameObject) Instantiate(grenade,transform.position + new Vector3(0,0.89f,0),Quaternion.Euler(new Vector3(0, -get_angle() + 90, 0)));
 		NetworkServer.Spawn (bomb);
 	}
+	*/
+
 }
+

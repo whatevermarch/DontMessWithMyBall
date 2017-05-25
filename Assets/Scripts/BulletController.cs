@@ -34,11 +34,11 @@ public class BulletController : MonoBehaviour {
 	}
 
 	void OnTriggerEnter(Collider col){
-		if (col.tag != "Player") {
+		if (col.tag == "Player") {
 			//Debug.Log ("hi");
-			if (col.tag == "Enemy" || col.tag == "Trap")
-				Destroy (col.gameObject);
-			Destroy (this.gameObject);
+			//if (col.tag == "Enemy" || col.tag == "Trap")
+				//Destroy (col.gameObject);
+			//Destroy (this.gameObject);
 		}
 	}
 
