@@ -1,8 +1,10 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
+
 using UnityEngine.Networking;
 
-public class PlayerController : NetworkBehaviour {
+public class MyPlayerController : NetworkBehaviour {
 
 	public float acc = 20f;
 	public float maxSpeed = 5f;
@@ -11,13 +13,20 @@ public class PlayerController : NetworkBehaviour {
 	public GameObject Cannon;
 	public GameObject ExplosionFX;
 
+	[SyncVar]
+	[HideInInspector]
+	public string playerName;
+	[SyncVar]
+	[HideInInspector]
+	public int teamNumber;
+	[SyncVar]
+	[HideInInspector]
+	public Color playerColor;
+
 	private Rigidbody rb;
 	private MeshRenderer mr;
 	private Collider cl;
-	private NetworkStartPosition[] spawnPointPool;
-
-	[SyncVar]
-	public bool isDead = false;
+	private List<Vector3> availableSP;
 
 	Vector3 movement;
 	bool isJumpable;
@@ -27,21 +36,37 @@ public class PlayerController : NetworkBehaviour {
 
 	// Use this for initialization
 	void Start () {
+		GetComponent<Renderer>().material.color = playerColor;
+
 		if (!isLocalPlayer)
 			return;
-		
+
 		rb = GetComponent<Rigidbody> ();
-		mr = GetComponent<MeshRenderer> ();
-		cl = GetComponent<Collider> ();
+		//mr = GetComponent<MeshRenderer> ();
+		//cl = GetComponent<Collider> ();
 		isJumpable = false;
 		sqrMaxSpeed = maxSpeed * maxSpeed;
 
-		spawnPointPool = FindObjectsOfType<NetworkStartPosition>();
+		availableSP = new List<Vector3> ();
+		NetworkStartPosition[] spawnPointPool = FindObjectsOfType<NetworkStartPosition>();
+		if (teamNumber == 1) {
+			foreach (NetworkStartPosition sp in spawnPointPool) {
+				if (sp.gameObject.layer == LayerMask.NameToLayer ("RedAsset"))
+					availableSP.Add (sp.transform.position);
+			}
+		}
+		else {
+			foreach(NetworkStartPosition sp in spawnPointPool){
+				if(sp.gameObject.layer == LayerMask.NameToLayer ("BlueAsset"))
+					availableSP.Add (sp.transform.position);
+			}		
+		}
+
 	}
 
 	// Update is called once per frame
 	void Update () {
-		if (!isLocalPlayer || isDead)
+		if (!isLocalPlayer)
 		{
 			return;
 		}
@@ -96,12 +121,12 @@ public class PlayerController : NetworkBehaviour {
 			return;
 		
 		// Set the spawn point to origin as a default value
-		Vector3 spawnPoint = Vector3.zero;
+		Vector3 spawnPoint = Vector3.zero + new Vector3(0f,3.82f,0f);
 
 		// If there is a spawn point array and the array is not empty, pick one at random
-		if (spawnPointPool != null && spawnPointPool.Length > 0)
+		if (availableSP.Count > 0)
 		{
-			spawnPoint = spawnPointPool[Random.Range(0, spawnPointPool.Length)].transform.position;
+			spawnPoint = availableSP [Random.Range (0, availableSP.Count)];//.transform.position;
 		}
 
 		// Set the player’s position to the chosen spawn point
@@ -118,7 +143,7 @@ public class PlayerController : NetworkBehaviour {
 
 	void FixedUpdate(){
 
-		if (!isLocalPlayer || isDead)
+		if (!isLocalPlayer)
 		{
 			return;
 		}
@@ -166,30 +191,6 @@ public class PlayerController : NetworkBehaviour {
 			rb.AddForce (Vector3.up * 700);
 		}
 	}
-	/*
-	float get_angle(){
-		Vector3 mousePos = Input.mousePosition;
-		//Debug.DrawRay (mousePos, Vector3.up);
-
-		Vector3 objectPos = myCam.WorldToScreenPoint (transform.position);
-		mousePos.x = mousePos.x - objectPos.x;
-		mousePos.y = mousePos.y - objectPos.y;
-		float angle = Mathf.Atan2(mousePos.y, mousePos.x) * Mathf.Rad2Deg;
-		return angle;
-	}
-
-	[Command]
-	void CmdShoot(){
-		var bullet = (GameObject) Instantiate(shot,transform.position,Quaternion.Euler(new Vector3(0, -get_angle() + 90, 0)));
-		NetworkServer.Spawn (bullet);
-	}
-
-	[Command]
-	void CmdThrowBomb(){
-		var bomb = (GameObject) Instantiate(grenade,transform.position + new Vector3(0,0.89f,0),Quaternion.Euler(new Vector3(0, -get_angle() + 90, 0)));
-		NetworkServer.Spawn (bomb);
-	}
-	*/
 
 }
 
