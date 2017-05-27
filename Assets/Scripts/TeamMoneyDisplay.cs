@@ -21,9 +21,8 @@ public class TeamMoneyDisplay : NetworkBehaviour {
 		player = GameObject.Find("Player(Clone)");
 		playerTeam = player.GetComponent<MyPlayerController>().teamNumber;
 
-		Debug.Log(playerTeam);
-		teamBlueMoney = 3000;
-		teamRedMoney = 20000;
+		teamBlueMoney = startMoney;
+		teamRedMoney = startMoney;
 		moneyRedText = transform.FindChild("Red").GetComponent<Text>();
 		moneyBlueText = transform.FindChild("Blue").GetComponent<Text>();
 

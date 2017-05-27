@@ -79,6 +79,7 @@ public class MineralController : NetworkBehaviour
 		remain -= totalTarget * getMineral;
         displayNumber.text = remain + " / " + amount;
     }
+
     public Vector3 DirFromAngle(float angleInDegrees, bool angleIsGlobal)
     {
         if (!angleIsGlobal)

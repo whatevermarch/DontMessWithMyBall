@@ -60,7 +60,7 @@ public class PlayerProfile : MonoBehaviour {
 							temp_lose = int.Parse(item.Value.ToString());
 						}
 					}
-					winrate.text =  "Winrate : " + (temp_win / (temp_win + temp_lose * 1.0)).ToString();
+					winrate.text =  "Winrate : " + ((temp_win / (temp_win + temp_lose * 1.0))*100).ToString();
 				}
 			}
 		});

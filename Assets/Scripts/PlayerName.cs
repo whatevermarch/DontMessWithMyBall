@@ -3,13 +3,9 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Networking;
 
-public class PlayerStat : MonoBehaviour {
+public class PlayerName : MonoBehaviour {
 
 	// Use this for initialization
-	public float accuracy;
-	public int kill;
-	public int death;
-	public float kdratio;
 	private Quaternion OrgRotation;
 	private Vector3 OrgPosition;
 	void Start () {
