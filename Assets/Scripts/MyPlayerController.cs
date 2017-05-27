@@ -6,12 +6,14 @@ using UnityEngine.Networking;
 
 public class MyPlayerController : NetworkBehaviour {
 
+	public int maxHP = 2;
+	public int maxSpeed = 5;
 	public float acc = 20f;
-	public float maxSpeed = 5f;
 	public float fallVelocity = -30f;
 	public GameObject Torrent;
 	public GameObject Cannon;
 	public GameObject ExplosionFX;
+	public GameObject MiniExplosionFX;
 
 	[SyncVar]
 	[HideInInspector]
@@ -22,17 +24,22 @@ public class MyPlayerController : NetworkBehaviour {
 	[SyncVar]
 	[HideInInspector]
 	public Color playerColor;
+	[SyncVar]
+	[HideInInspector]
+	public int lifePoint;
 
 	private Rigidbody rb;
 	private MeshRenderer mr;
 	private Collider cl;
 	private List<Vector3> availableSP;
+	private float teamTRFireInterval = 0.8f;
 
 	Vector3 movement;
 	bool isJumpable;
 	float sqrMaxSpeed;
 	float timer;
 	float clickInterval = 0.2f;
+	float explosionYield = 3f;
 
 	// Use this for initialization
 	void Start () {
@@ -51,16 +58,18 @@ public class MyPlayerController : NetworkBehaviour {
 		NetworkStartPosition[] spawnPointPool = FindObjectsOfType<NetworkStartPosition>();
 		if (teamNumber == 1) {
 			foreach (NetworkStartPosition sp in spawnPointPool) {
-				if (sp.gameObject.layer == LayerMask.NameToLayer ("RedAsset"))
+				if (sp.tag == "RedSpawnPoint")
 					availableSP.Add (sp.transform.position);
 			}
 		}
 		else {
 			foreach(NetworkStartPosition sp in spawnPointPool){
-				if(sp.gameObject.layer == LayerMask.NameToLayer ("BlueAsset"))
+				if(sp.tag == "BlueSpawnPoint")
 					availableSP.Add (sp.transform.position);
 			}		
 		}
+
+		respawnFunc ();
 
 	}
 
@@ -94,24 +103,104 @@ public class MyPlayerController : NetworkBehaviour {
 
 	[Command]
 	void CmdSetTorrent(){
-		GameObject torrent = Instantiate(Torrent,transform.position,Quaternion.identity);
+		GameObject torrent = Instantiate(Torrent, transform.position + new Vector3(0f,0f,1f) ,Quaternion.identity);
+		torrent.GetComponent<TorrentController> ().teamNumber = teamNumber;
 		NetworkServer.Spawn (torrent);
 	}
 
 	[Command]
 	void CmdSetCannon(){
-		GameObject cannon = Instantiate(Cannon,transform.position,Quaternion.identity);
+		GameObject cannon = Instantiate(Cannon,transform.position + new Vector3(0f,0f,1f) ,Quaternion.identity);
 		NetworkServer.Spawn (cannon);
 	}
 
 	[Command]
+	void CmdUpgrade(int choice){
+		switch (choice) {
+		case 1:
+			RpcUpgradeMaxHP (teamNumber);
+			break;
+		case 2:
+			RpcUpgradeSpeed (teamNumber);
+			break;
+		case 3:
+			RpcUpgradeTorrentShotRate (teamNumber);
+			break;
+		}
+	}
+
+	[Command]
 	void CmdKamikaze(){
+		
+		Collider[] colliders = Physics.OverlapSphere(transform.position, explosionYield);
+		if (teamNumber == 1) {
+			foreach (Collider hit in colliders) {
+				if (hit.gameObject.tag == "Player") {
+					if (hit.gameObject.GetComponent<MyPlayerController> ().teamNumber == 2) {
+						// Damage them
+
+					}
+				}
+				else if (hit.gameObject.layer == LayerMask.NameToLayer("BlueAsset")) {
+					// Damage them
+
+				} 
+			}
+		}
+		else if (teamNumber == 2) {
+			foreach (Collider hit in colliders) {
+				if (hit.gameObject.tag == "Player") {
+					if (hit.gameObject.GetComponent<MyPlayerController> ().teamNumber == 1) {
+						// Damage them
+
+					}
+				}
+				else if (hit.gameObject.layer == LayerMask.NameToLayer("RedAsset")) {
+					// Damage them
+
+				} 
+			}
+		}
+
 		GameObject fx = Instantiate(ExplosionFX,transform.position,Quaternion.identity);
 		NetworkServer.Spawn (fx);
 
+		lifePoint = maxHP;
 		RpcRespawn ();
 
 		// Detect enemy and damage them
+	}
+
+	[ClientRpc]
+	void RpcUpgradeMaxHP(int team){
+		if (team != teamNumber)
+			return;
+
+		int tmp = maxHP + 1;
+		if (tmp <= 10)
+			maxHP = tmp;
+		
+	}
+
+	[ClientRpc]
+	void RpcUpgradeSpeed(int team){
+		if (team != teamNumber)
+			return;
+
+		int tmp = maxSpeed + 1;
+		if (tmp <= 10)
+			maxSpeed = tmp;
+		
+	}
+
+	[ClientRpc]
+	void RpcUpgradeTorrentShotRate(int team){
+		if (team != teamNumber)
+			return;
+
+		float tmp = teamTRFireInterval - 0.1f;
+		if (tmp >= 0.4f)
+			teamTRFireInterval = tmp;
 	}
 
 	[ClientRpc]
@@ -120,6 +209,11 @@ public class MyPlayerController : NetworkBehaviour {
 		if (!isLocalPlayer)
 			return;
 		
+		respawnFunc ();
+
+	}
+
+	void respawnFunc(){
 		// Set the spawn point to origin as a default value
 		Vector3 spawnPoint = Vector3.zero + new Vector3(0f,3.82f,0f);
 
@@ -132,6 +226,20 @@ public class MyPlayerController : NetworkBehaviour {
 		// Set the player’s position to the chosen spawn point
 		transform.position = spawnPoint;
 
+	}
+
+	public void takeDamage(int amount){
+		if (!isServer)
+			return;
+
+		lifePoint -= amount;
+
+		if (lifePoint <= 0) {
+			GameObject fx = Instantiate(MiniExplosionFX,transform.position,Quaternion.identity);
+			NetworkServer.Spawn (fx);
+			lifePoint = maxHP;
+			RpcRespawn ();
+		}
 	}
 
 	void OnCollisionEnter(Collision obj){

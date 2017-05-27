@@ -12,7 +12,6 @@ public class BombController : MonoBehaviour {
 	float timer = 0f;
 	float lifeTime = 5f;
 	Vector3 direction = Vector3.zero;
-	bool isDirAssigned = false;
 
 	// Use this for initialization
 	void Start () {

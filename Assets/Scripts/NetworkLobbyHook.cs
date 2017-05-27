@@ -5,6 +5,7 @@ using Prototype.NetworkLobby;
 using UnityEngine.Networking;
 
 public class NetworkLobbyHook : LobbyHook {
+
 	public override void OnLobbyServerSceneLoadedForPlayer(NetworkManager manager, GameObject lobbyPlayer, GameObject gamePlayer)
 	{
 		LobbyPlayer lobby = lobbyPlayer.GetComponent<LobbyPlayer>();
@@ -16,6 +17,9 @@ public class NetworkLobbyHook : LobbyHook {
 			myplayer.teamNumber = 1;
 		else
 			myplayer.teamNumber = 2;
+
+		// custom
+		myplayer.lifePoint = 2;
 
 	}
 

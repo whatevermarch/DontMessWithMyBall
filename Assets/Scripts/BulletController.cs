@@ -9,8 +9,6 @@ public class BulletController : NetworkBehaviour {
 
 	float timer;
 	float lifeTime;
-	Vector3 direction = Vector3.zero;
-	bool isDirAssigned = false;
 	[SyncVar]
 	[HideInInspector]
 	public int bullet_color;
