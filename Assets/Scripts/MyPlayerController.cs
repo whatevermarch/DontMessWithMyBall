@@ -84,7 +84,7 @@ public class MyPlayerController : NetworkBehaviour {
 			moneyRedText.enabled = false;
 		}	
 	}
-		
+
 	// Update is called once per frame
 	void Update () {
 
@@ -142,7 +142,7 @@ public class MyPlayerController : NetworkBehaviour {
 	{
 		if (!isLocalPlayer)
 			return;
-		
+
 		// Set the spawn point to origin as a default value
 		Vector3 spawnPoint = Vector3.zero + new Vector3(0f,3.82f,0f);
 
