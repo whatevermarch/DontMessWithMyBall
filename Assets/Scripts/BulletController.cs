@@ -1,6 +1,7 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections;
 using UnityEngine.Networking;
+
 public class BulletController : NetworkBehaviour {
 
 	public float speed;
@@ -59,3 +60,4 @@ public class BulletController : NetworkBehaviour {
 		direction = dir;
 	}*/
 }
+

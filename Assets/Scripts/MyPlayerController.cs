@@ -1,8 +1,12 @@
-﻿using UnityEngine;
+using UnityEngine;
+using UnityEngine.UI;
+using UnityEngine.Networking;
 using System.Collections;
 using System.Collections.Generic;
 
-using UnityEngine.Networking;
+using Firebase.Database;
+using Firebase;
+using Firebase.Unity.Editor;
 
 public class MyPlayerController : NetworkBehaviour {
 
@@ -33,6 +37,9 @@ public class MyPlayerController : NetworkBehaviour {
 	private Collider cl;
 	private List<Vector3> availableSP;
 	private float teamTRFireInterval = 0.8f;
+	private GameObject mineralDisplay;
+	private Text moneyRedText;
+	private Text moneyBlueText;
 
 	Vector3 movement;
 	bool isJumpable;
@@ -40,6 +47,19 @@ public class MyPlayerController : NetworkBehaviour {
 	float timer;
 	float clickInterval = 0.2f;
 	float explosionYield = 3f;
+
+	DatabaseReference mDatabaseRef;
+
+	private void Awake()  
+	{
+		#if UNITY_EDITOR
+			FirebaseApp.DefaultInstance.SetEditorDatabaseUrl(
+				"https://game-dev-dabab.firebaseio.com/");
+		#else
+			FirebaseApp.DefaultInstance.Options.DatabaseUrl = 
+			new System.Uri("https://game-dev-dabab.firebaseio.com");
+		#endif
+	}
 
 	// Use this for initialization
 	void Start () {
@@ -73,6 +93,20 @@ public class MyPlayerController : NetworkBehaviour {
 
 	}
 
+	IEnumerator GetText (float waitTime)
+	{
+		yield return new WaitForSeconds(0.1f);
+		mineralDisplay = GameObject.FindGameObjectWithTag ("MineralDisplay");
+		moneyRedText = mineralDisplay.transform.FindChild ("Red").GetComponent<Text>();
+		moneyBlueText = mineralDisplay.transform.FindChild ("Blue").GetComponent<Text>();
+		if(teamNumber == 1){			
+			moneyBlueText.enabled = false;
+		}
+		else{
+			moneyRedText.enabled = false;
+		}	
+	}
+
 	// Update is called once per frame
 	void Update () {
 		if (!isLocalPlayer)
@@ -81,6 +115,14 @@ public class MyPlayerController : NetworkBehaviour {
 		}
 
 		setCamera ();
+
+		if (StatManager.gameOver == true) {
+			if (teamNumber == StatManager.team_lose) {
+				writePlayer (playerName, 0, 1);
+			} else {
+				writePlayer (playerName, 1, 0);
+			}
+		}
 
 		//checkGrounded ();
 		timer += Time.deltaTime;
@@ -118,6 +160,11 @@ public class MyPlayerController : NetworkBehaviour {
 	}
 
 	[Command]
+	void CmdResetGame(){
+		StatManager.gameOver = false;
+	}
+
+	[Command]
 	void CmdSetTorrent(){
 		GameObject torrent = Instantiate(Torrent, transform.position + new Vector3(0f,-0.7f,1.5f) ,Quaternion.identity);
 		torrent.GetComponent<TorrentController> ().torrentTeamNumber = teamNumber;
@@ -150,6 +197,11 @@ public class MyPlayerController : NetworkBehaviour {
 
 	[Command]
 	void CmdKamikaze(){
+		if (teamNumber == 1) {
+			StatManager.kamikaze_red += 1;
+		} else {
+			StatManager.kamikaze_blue += 1;
+		}
 		
 		Collider[] colliders = Physics.OverlapSphere(transform.position, explosionYield);
 		if (teamNumber == 1) {
@@ -158,10 +210,12 @@ public class MyPlayerController : NetworkBehaviour {
 					if (hit.GetComponent<MyPlayerController> ().teamNumber == 2) {
 						// Damage them
 						hit.GetComponent<MyPlayerController>().takeDamage(10);
+						StatManager.kill_red += 1;
 					}
 				}
 				else if (hit.gameObject.layer == LayerMask.NameToLayer("BlueAsset")) {
 					// Damage them
+					RpcDamageBuilding(hit.gameObject);
 
 				} 
 			}
@@ -172,10 +226,12 @@ public class MyPlayerController : NetworkBehaviour {
 					if (hit.GetComponent<MyPlayerController> ().teamNumber == 1) {
 						// Damage them
 						hit.GetComponent<MyPlayerController>().takeDamage(10);
+						StatManager.kill_blue += 1;
 					}
 				}
 				else if (hit.gameObject.layer == LayerMask.NameToLayer("RedAsset")) {
 					// Damage them
+					RpcDamageBuilding(hit.gameObject);
 
 				} 
 			}
@@ -188,6 +244,11 @@ public class MyPlayerController : NetworkBehaviour {
 		RpcRespawn ();
 
 		// Detect enemy and damage them
+	}
+
+	[ClientRpc]
+	void RpcDamageBuilding(GameObject hit){
+		hit.GetComponent<BuildingController>().buildingHealth -= 10;
 	}
 
 	[ClientRpc]
@@ -321,5 +382,58 @@ public class MyPlayerController : NetworkBehaviour {
 		}
 	}
 
+	private void writePlayer(string playerName, int win, int lose) {
+
+		FirebaseDatabase.DefaultInstance
+			.GetReference("Player").Child(playerName)
+			.GetValueAsync().ContinueWith(task => {
+				if (task.IsFaulted) {
+					Debug.Log("Error");
+				}
+				else if (task.IsCompleted) {
+					DataSnapshot snapshot = task.Result;
+					if(snapshot.Value != null){
+						var stat = snapshot.Value as Dictionary<string, object>;
+						foreach (var item in stat)
+						{
+							Debug.Log(item.Key + ": " + item.Value);
+							if(item.Key == "win"){
+								win += int.Parse(item.Value.ToString());
+							}
+							else if(item.Key == "lose"){
+								lose += int.Parse(item.Value.ToString());
+							}
+						}
+						Debug.Log("Hello");
+						Stat playerStat = new Stat(win, lose);
+						string json = JsonUtility.ToJson(playerStat);
+
+						mDatabaseRef = FirebaseDatabase.DefaultInstance.RootReference;
+						mDatabaseRef.Child("Player").Child(playerName).SetRawJsonValueAsync(json);
+					}
+					else{
+						Stat playerStat = new Stat(win, lose);
+						string json = JsonUtility.ToJson(playerStat);
+						Debug.Log(json);
+
+
+						mDatabaseRef = FirebaseDatabase.DefaultInstance.RootReference;
+						mDatabaseRef.Child("Player").Child(playerName).SetRawJsonValueAsync(json);
+					}
+				}
+			});
+	}
 }
 
+public class Stat {
+	public int win;
+	public int lose;
+
+	public Stat() {
+	}
+
+	public Stat(int win, int lose) {
+		this.win = win;
+		this.lose = lose;
+	}
+}
