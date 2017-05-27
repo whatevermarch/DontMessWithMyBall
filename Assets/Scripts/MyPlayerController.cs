@@ -87,7 +87,10 @@ public class MyPlayerController : NetworkBehaviour {
 
 		if (Input.GetKey("x") && timer > clickInterval) {
 			CmdSetTorrent();
-			//CmdSetCannon();
+			timer = 0f;
+		}
+		else if (Input.GetKey("c") && timer > clickInterval) {
+			CmdSetCannon();
 			timer = 0f;
 		}
 		else if (Input.GetKey("z") && timer > clickInterval) {
@@ -116,15 +119,17 @@ public class MyPlayerController : NetworkBehaviour {
 
 	[Command]
 	void CmdSetTorrent(){
-		GameObject torrent = Instantiate(Torrent, transform.position + new Vector3(0f,0f,1f) ,Quaternion.identity);
-		torrent.GetComponent<TorrentController> ().teamNumber = teamNumber;
+		GameObject torrent = Instantiate(Torrent, transform.position + new Vector3(0f,-0.7f,1.5f) ,Quaternion.identity);
+		torrent.GetComponent<TorrentController> ().torrentTeamNumber = teamNumber;
 		torrent.GetComponent<TorrentController> ().setFireInterval (teamTRFireInterval);
 		NetworkServer.Spawn (torrent);
 	}
 
 	[Command]
 	void CmdSetCannon(){
-		GameObject cannon = Instantiate(Cannon,transform.position + new Vector3(0f,0f,1f) ,Quaternion.identity);
+		GameObject cannon = Instantiate(Cannon,transform.position + new Vector3(0f,-0.5f,1.5f) ,Quaternion.identity);
+		cannon.GetComponent<CannonController> ().cannonTeamNumber = teamNumber;
+		cannon.GetComponent<CannonController> ().setFireInterval (teamTRFireInterval + 0.6f);
 		NetworkServer.Spawn (cannon);
 	}
 
@@ -150,9 +155,9 @@ public class MyPlayerController : NetworkBehaviour {
 		if (teamNumber == 1) {
 			foreach (Collider hit in colliders) {
 				if (hit.gameObject.tag == "Player") {
-					if (hit.gameObject.GetComponent<MyPlayerController> ().teamNumber == 2) {
+					if (hit.GetComponent<MyPlayerController> ().teamNumber == 2) {
 						// Damage them
-
+						hit.GetComponent<MyPlayerController>().takeDamage(10);
 					}
 				}
 				else if (hit.gameObject.layer == LayerMask.NameToLayer("BlueAsset")) {
@@ -164,9 +169,9 @@ public class MyPlayerController : NetworkBehaviour {
 		else if (teamNumber == 2) {
 			foreach (Collider hit in colliders) {
 				if (hit.gameObject.tag == "Player") {
-					if (hit.gameObject.GetComponent<MyPlayerController> ().teamNumber == 1) {
+					if (hit.GetComponent<MyPlayerController> ().teamNumber == 1) {
 						// Damage them
-
+						hit.GetComponent<MyPlayerController>().takeDamage(10);
 					}
 				}
 				else if (hit.gameObject.layer == LayerMask.NameToLayer("RedAsset")) {

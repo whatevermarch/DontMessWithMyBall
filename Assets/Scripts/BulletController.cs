@@ -13,10 +13,9 @@ public class BulletController : NetworkBehaviour {
 	[HideInInspector]
 	public int bullet_color;
 
-
 	// Use this for initialization
 	void Start () {
-		Debug.Log("Bullet" + bullet_color);
+		//Debug.Log("Bullet" + bullet_color);
 		if(bullet_color == 1)
 			GetComponent<Renderer>().material.color = Color.red;
 		else
@@ -41,11 +40,16 @@ public class BulletController : NetworkBehaviour {
 	}
 
 	void OnTriggerEnter(Collider col){
-		if (col.tag == "Player") {
-			//Debug.Log ("hi");
-			//if (col.tag == "Enemy" || col.tag == "Trap")
-				//Destroy (col.gameObject);
-			//Destroy (this.gameObject);
+		if(col.gameObject.layer == LayerMask.NameToLayer("Floor")){
+			Destroy (this.gameObject);
+		}
+		else if (col.tag == "Player") {
+			if ((bullet_color == 1 && col.GetComponent<MyPlayerController> ().teamNumber == 2) ||
+				(bullet_color == 2 && col.GetComponent<MyPlayerController> ().teamNumber == 1)) {
+
+				col.GetComponent<MyPlayerController> ().takeDamage (1);
+				Destroy (this.gameObject);
+			}
 		}
 	}
 
