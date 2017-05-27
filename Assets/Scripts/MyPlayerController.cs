@@ -166,10 +166,10 @@ public class MyPlayerController : NetworkBehaviour {
 
 	[Command]
 	void CmdSetTorrent(){
-		GameObject torrent = Instantiate(Torrent, transform.position + new Vector3(0f,-0.7f,1.5f) ,Quaternion.identity);
-		torrent.GetComponent<TorrentController> ().torrentTeamNumber = teamNumber;
-		torrent.GetComponent<TorrentController> ().setFireInterval (teamTRFireInterval);
-		NetworkServer.Spawn (torrent);
+		GameObject turret = Instantiate(Torrent, transform.position + new Vector3(0f,-0.7f,1.5f) ,Quaternion.identity);
+		turret.GetComponent<TurretController> ().turretTeamNumber = teamNumber;
+		turret.GetComponent<TurretController> ().setFireInterval (teamTRFireInterval);
+		NetworkServer.Spawn (turret);
 	}
 
 	[Command]
