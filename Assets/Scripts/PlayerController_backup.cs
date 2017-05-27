@@ -1,6 +1,5 @@
 ﻿using UnityEngine;
 using System.Collections;
-using UnityEngine;
 using UnityEngine.Networking;
 
 public class PlayerController_backup : NetworkBehaviour {
@@ -18,8 +17,6 @@ public class PlayerController_backup : NetworkBehaviour {
 	bool isJumpable;
 	float sqrMaxSpeed;
 	float timer;
-	float maxRayLength = 100f;
-	int sceneMask;
 
 
 	// Use this for initialization
@@ -27,7 +24,6 @@ public class PlayerController_backup : NetworkBehaviour {
 		rb = GetComponent<Rigidbody> ();
 		isJumpable = false;
 		sqrMaxSpeed = maxSpeed * maxSpeed;
-		sceneMask = LayerMask.GetMask ("Scene");
 	}
 
 
