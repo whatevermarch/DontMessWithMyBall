@@ -85,15 +85,28 @@ public class MyPlayerController : NetworkBehaviour {
 		//checkGrounded ();
 		timer += Time.deltaTime;
 
-		if (Input.GetButton("Fire1") && timer > clickInterval) {
+		if (Input.GetKey("x") && timer > clickInterval) {
 			CmdSetTorrent();
 			//CmdSetCannon();
 			timer = 0f;
 		}
-		else if (Input.GetButton("Fire2") && timer > clickInterval) {
+		else if (Input.GetKey("z") && timer > clickInterval) {
 			CmdKamikaze();
 			timer = 0f;
 		}
+		else if (Input.GetKey("d") && timer > clickInterval) {
+			CmdUpgrade (3);
+			timer = 0f;
+		}
+		else if (Input.GetKey("s") && timer > clickInterval) {
+			CmdUpgrade (2);
+			timer = 0f;
+		}
+		else if (Input.GetKey("a") && timer > clickInterval) {
+			CmdUpgrade (1);
+			timer = 0f;
+		}
+
 	}
 
 	void setCamera(){
@@ -105,6 +118,7 @@ public class MyPlayerController : NetworkBehaviour {
 	void CmdSetTorrent(){
 		GameObject torrent = Instantiate(Torrent, transform.position + new Vector3(0f,0f,1f) ,Quaternion.identity);
 		torrent.GetComponent<TorrentController> ().teamNumber = teamNumber;
+		torrent.GetComponent<TorrentController> ().setFireInterval (teamTRFireInterval);
 		NetworkServer.Spawn (torrent);
 	}
 
@@ -188,8 +202,10 @@ public class MyPlayerController : NetworkBehaviour {
 			return;
 
 		int tmp = maxSpeed + 1;
-		if (tmp <= 10)
+		if (tmp <= 10) {
 			maxSpeed = tmp;
+			sqrMaxSpeed = maxSpeed * maxSpeed;
+		}
 		
 	}
 
