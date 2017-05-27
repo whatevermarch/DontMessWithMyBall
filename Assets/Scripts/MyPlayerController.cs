@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.UI;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -27,7 +28,9 @@ public class MyPlayerController : NetworkBehaviour {
 	private MeshRenderer mr;
 	private Collider cl;
 	private List<Vector3> availableSP;
-
+	private GameObject mineralDisplay;
+	private Text moneyRedText;
+	private Text moneyBlueText;
 	Vector3 movement;
 	bool isJumpable;
 	float sqrMaxSpeed;
@@ -38,8 +41,12 @@ public class MyPlayerController : NetworkBehaviour {
 	void Start () {
 		GetComponent<Renderer>().material.color = playerColor;
 
-		if (!isLocalPlayer)
+
+		if (!isLocalPlayer){
 			return;
+		}
+		StartCoroutine(GetText(2f));
+
 
 		rb = GetComponent<Rigidbody> ();
 		//mr = GetComponent<MeshRenderer> ();
@@ -64,12 +71,28 @@ public class MyPlayerController : NetworkBehaviour {
 
 	}
 
+	IEnumerator GetText (float waitTime)
+	{
+		yield return new WaitForSeconds(0.1f);
+		mineralDisplay = GameObject.FindGameObjectWithTag ("MineralDisplay");
+		moneyRedText = mineralDisplay.transform.FindChild ("Red").GetComponent<Text>();
+		moneyBlueText = mineralDisplay.transform.FindChild ("Blue").GetComponent<Text>();
+		if(teamNumber == 1){			
+			moneyBlueText.enabled = false;
+		}
+		else{
+			moneyRedText.enabled = false;
+		}	
+	}
+		
 	// Update is called once per frame
 	void Update () {
+
 		if (!isLocalPlayer)
 		{
 			return;
 		}
+
 
 		setCamera ();
 

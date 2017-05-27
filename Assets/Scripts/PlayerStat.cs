@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Networking;
 
-public class PlayerStat : NetworkBehaviour {
+public class PlayerStat : MonoBehaviour {
 
 	// Use this for initialization
 	public float accuracy;
