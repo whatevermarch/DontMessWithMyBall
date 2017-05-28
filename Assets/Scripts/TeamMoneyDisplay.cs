@@ -18,8 +18,6 @@ public class TeamMoneyDisplay : NetworkBehaviour {
 	private Text moneyBlueText;
 
 	void Start () {
-		player = GameObject.Find("Player(Clone)");
-		playerTeam = player.GetComponent<MyPlayerController>().teamNumber;
 
 		teamBlueMoney = startMoney;
 		teamRedMoney = startMoney;
@@ -30,7 +28,8 @@ public class TeamMoneyDisplay : NetworkBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-		RpcDisplayMoney();
+		if(isServer)		
+			RpcDisplayMoney();
 	}
 
 	[ClientRpc]

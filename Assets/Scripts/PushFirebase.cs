@@ -5,8 +5,9 @@ using Firebase.Database;
 using Firebase;
 using Firebase.Unity.Editor;
 using UnityEngine.SceneManagement;
+using UnityEngine.Networking;
 
-public class PushFirebase : MonoBehaviour {
+public class PushFirebase : NetworkBehaviour {
 
 	DatabaseReference mDatabase;
 
@@ -24,9 +25,24 @@ public class PushFirebase : MonoBehaviour {
 		mDatabase = FirebaseDatabase.DefaultInstance.RootReference;
 	}
 
-	public void sendData(){
-		WriteNewScore (StatManager.kamikaze_red, StatManager.kill_red, StatManager.kamikaze_blue, StatManager.kill_blue, StatManager.team_lose);
-		SceneManager.LoadScene ("Title Screen");
+	void Update(){
+		if(StatManager.gameOver == true)
+			RpcGameOver();
+	}
+	[ClientRpc]
+	void RpcGameOver(){
+		StartCoroutine("DelayEndGame", 3f);
+	}
+
+	IEnumerator DelayEndGame(float delay)
+	{
+		yield return new WaitForSeconds(delay);
+		EndGame();
+		SceneManager.LoadScene ("End Game");
+	}
+	public void EndGame(){
+		if(isServer)
+			WriteNewScore (StatManager.kamikaze_red, StatManager.kill_red, StatManager.kamikaze_blue, StatManager.kill_blue, StatManager.team_lose);
 	}
 	private void WriteNewScore(int kamikaze_red, int kill_red,int kamikaze_blue, int kill_blue, int team_lose) {
 		// Create new entry at /user-scores/$userid/$scoreid and at

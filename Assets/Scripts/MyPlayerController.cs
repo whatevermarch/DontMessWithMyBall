@@ -48,16 +48,17 @@ public class MyPlayerController : NetworkBehaviour {
 	float clickInterval = 0.2f;
 	float explosionYield = 3f;
 
+	private bool isWriteToDataBase = false;
 	DatabaseReference mDatabaseRef;
 
 	private void Awake()  
 	{
 		#if UNITY_EDITOR
 			FirebaseApp.DefaultInstance.SetEditorDatabaseUrl(
-				"https://game-dev-dabab.firebaseio.com/");
+			"https://game-dev-dabab.firebaseio.com/");
 		#else
 			FirebaseApp.DefaultInstance.Options.DatabaseUrl = 
-			new System.Uri("https://game-dev-dabab.firebaseio.com");
+		new System.Uri("https://game-dev-dabab.firebaseio.com");
 		#endif
 	}
 
@@ -68,7 +69,7 @@ public class MyPlayerController : NetworkBehaviour {
 		if (!isLocalPlayer)
 			return;
 
-		//StartCoroutine (GetText (2f));
+		StartCoroutine (GetText (2f));
 		//CmdResetGame ();
 
 		rb = GetComponent<Rigidbody> ();
@@ -98,8 +99,9 @@ public class MyPlayerController : NetworkBehaviour {
 
 	IEnumerator GetText (float waitTime)
 	{
-		yield return new WaitForSeconds(0.1f);
-		mineralDisplay = GameObject.FindGameObjectWithTag ("MineralDisplay");
+		yield return new WaitForSeconds(0.2f);
+		mineralDisplay = GameObject.Find ("MineralDisplay");
+
 		moneyRedText = mineralDisplay.transform.FindChild ("Red").GetComponent<Text>();
 		moneyBlueText = mineralDisplay.transform.FindChild ("Blue").GetComponent<Text>();
 		if(teamNumber == 1){			
@@ -120,10 +122,13 @@ public class MyPlayerController : NetworkBehaviour {
 		setCamera ();
 
 		if (StatManager.gameOver == true) {
-			if (teamNumber == StatManager.team_lose) {
-				writePlayer (playerName, 0, 1);
-			} else {
-				writePlayer (playerName, 1, 0);
+			if(!isWriteToDataBase){
+				if (teamNumber == StatManager.team_lose ) {
+					writePlayer (playerName, 0, 1);
+				} else {
+					writePlayer (playerName, 1, 0);
+				}
+				isWriteToDataBase = true;
 			}
 		}
 

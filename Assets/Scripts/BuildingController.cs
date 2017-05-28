@@ -21,18 +21,13 @@ public class BuildingController : NetworkBehaviour {
 			StatManager.gameOver = true;
 			teamLose = buildingTeam;
 			StatManager.team_lose = buildingTeam;
-			RpcGameOver ();
+			RpcClientUpdate();
 		}
 	}
 
 	[ClientRpc]
-	void RpcGameOver(){
-		StartCoroutine("DelayEndGame", 3f);
+	void RpcClientUpdate(){
+		StatManager.team_lose = buildingTeam;
 	}
 
-	IEnumerator DelayEndGame(float delay)
-	{
-		yield return new WaitForSeconds(delay);
-		SceneManager.LoadScene ("End Game");
-	}
 }
