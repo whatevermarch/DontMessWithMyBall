@@ -68,6 +68,9 @@ public class MyPlayerController : NetworkBehaviour {
 		if (!isLocalPlayer)
 			return;
 
+		//StartCoroutine (GetText (2f));
+		//CmdResetGame ();
+
 		rb = GetComponent<Rigidbody> ();
 		//mr = GetComponent<MeshRenderer> ();
 		//cl = GetComponent<Collider> ();
