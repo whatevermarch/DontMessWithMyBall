@@ -27,9 +27,9 @@ public class MineralController : NetworkBehaviour
         displayNumber = transform.GetChild(0).GetComponent<TextMesh>();
         remain = amount;
         displayNumber.text = remain + " / " + amount;
-        moneyValue = GameObject.Find("MineralDisplay").GetComponent<TeamMoneyDisplay>();
-        moneyText = GameObject.Find("MineralDisplay").transform.GetChild(0).GetComponent<Text>();
-        StartCoroutine("RenderTargetsWithDelay", 2f);
+//        moneyValue = GameObject.Find("MineralDisplay").GetComponent<TeamMoneyDisplay>();
+//        moneyText = GameObject.Find("MineralDisplay").transform.GetChild(0).GetComponent<Text>();
+//        StartCoroutine("RenderTargetsWithDelay", 2f);
     }
 
     IEnumerator RenderTargetsWithDelay(float delay)
